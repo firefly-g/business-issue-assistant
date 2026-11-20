@@ -1,4 +1,4 @@
-/** @description 维护登录表单和失败恢复，口令只传给身份 Service，不写入客户端状态存储。 */
+/** @description 维护登录表单、演示账号预填和失败恢复，提交时由身份 Service 验证凭证。 */
 import { useState } from 'react'
 import { Alert, Button, Form, Input } from 'antd'
 import { ArrowRightOutlined } from '@ant-design/icons'
@@ -6,7 +6,13 @@ import { useSessionStore } from '../store/session'
 import { errorMessage } from '../api/client'
 import type { LoginInput } from '../api/services/identity'
 
-/** 登录成功由会话 Store 挂载工作台，失败保留输入并显示后台归一化错误。 */
+// 开发和本地预览使用 README 公开的演示凭证，常规生产构建保持空表单。
+const demoLoginValues: LoginInput | undefined =
+  import.meta.env.DEV || import.meta.env.MODE === 'local-preview'
+    ? { email: 'admin@example.com', password: 'local-dev-2026' }
+    : undefined
+
+/** 演示凭证可编辑，用户提交后由会话 Store 登录，失败时保留输入。 */
 export function Login() {
   const [isBusy, setIsBusy] = useState(false)
   const [error, setError] = useState('')
@@ -46,6 +52,7 @@ export function Login() {
         {error && <Alert type="error" title={error} showIcon />}
         <Form
           layout="vertical"
+          initialValues={demoLoginValues}
           onFinish={(values: LoginInput) => void submit(values)}
           requiredMark={false}
         >
