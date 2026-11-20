@@ -3,7 +3,7 @@
 from fastapi import APIRouter
 from sqlalchemy import func, select
 
-from ..config import settings
+from ..application.model_settings import runtime_mode
 from ..contracts.responses import HealthRead, OverviewRead
 from ..models import Case, Question
 from .dependencies import DB, CurrentActor
@@ -15,9 +15,7 @@ router = APIRouter(tags=["工作台"])
 def health(db: DB) -> HealthRead:
     """执行轻量数据库探测，响应不暴露连接信息。"""
     db.execute(select(1))
-    return HealthRead(
-        status="ok", analysis_mode="model" if settings.model_enabled else "local_rules"
-    )
+    return HealthRead(status="ok", analysis_mode=runtime_mode(db))
 
 
 @router.get("/overview", response_model=OverviewRead, operation_id="overview")
@@ -36,7 +34,7 @@ def overview(actor: CurrentActor, db: DB) -> OverviewRead:
         or 0
     )
     return OverviewRead(
-        analysis_mode="model" if settings.model_enabled else "local_rules",
+        analysis_mode=runtime_mode(db),
         published=sum(item.publication == "published" for item in items),
         verified=sum(
             item.publication == "published" and item.validity == "verified" for item in items

@@ -22,9 +22,9 @@ export function RecentCases({ business, openCase }: RecentCasesProps) {
   return (
     <section className="recent-section">
       <div className="section-heading">
-        <h2>团队最近留下的经验</h2>
+        <h2>近期已验证案例</h2>
         <Link to={`/cases?${new URLSearchParams({ business })}`}>
-          查看案例库 <ArrowRightOutlined />
+          查看案例库 <ArrowRightOutlined aria-hidden />
         </Link>
       </div>
       {recent.isLoading ? (
@@ -41,10 +41,10 @@ export function RecentCases({ business, openCase }: RecentCasesProps) {
         ))
       ) : (
         <div className="empty-inline">
-          <FileTextOutlined className="empty-icon" />
-          <p>这里将展示团队已发布并验证的经验。</p>
+          <FileTextOutlined className="empty-icon" aria-hidden />
+          <p>暂无已验证的案例</p>
           <Link to={`/intake?${new URLSearchParams({ business })}`}>
-            收录第一条经验 <ArrowRightOutlined />
+            收录经验 <ArrowRightOutlined aria-hidden />
           </Link>
         </div>
       )}

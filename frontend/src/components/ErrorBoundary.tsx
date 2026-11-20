@@ -24,7 +24,6 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
           <Alert
             type="error"
             title="页面暂时无法显示"
-            description="请重新加载后继续，已保存的记录可从工作台查看。"
             showIcon
             action={<Button onClick={() => location.reload()}>重新加载</Button>}
           />

@@ -26,6 +26,8 @@ export type DraftPreview = components['schemas']['DraftPreview']
 export type Revision = components['schemas']['RevisionRead']
 /** 当前可访问案例与个人提问的统计。 */
 export type Overview = components['schemas']['OverviewRead']
+/** 后台实际用于问题分析和收录预览的运行模式。 */
+export type AnalysisMode = Overview['analysis_mode']
 
 /** 发布状态文案，与方案有效性分别显示。 */
 export const publicationLabels = {

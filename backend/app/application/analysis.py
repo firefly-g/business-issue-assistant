@@ -5,7 +5,6 @@ from time import perf_counter
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..config import settings
 from ..contracts.responses import (
     AnalysisRead,
     AnalysisResult,
@@ -24,6 +23,7 @@ from ..provider import model_json
 from .cases import search_cases
 from .identity import refresh_actor
 from .materials import owned_source
+from .model_settings import active_connection
 from .rules import ANALYSIS_RULE, RULE_VERSION
 
 
@@ -77,7 +77,8 @@ def analyze(db: Session, actor: Actor, command: AnalysisCommand) -> AnalysisRead
     ]
     # 2. 模型只能返回建议字段，引用由授权检索确定，失败不写入成功记录。
     result = _local_result(citations)
-    if settings.model_enabled:
+    connection = active_connection(db)
+    if connection:
         advice = model_json(
             ANALYSIS_RULE,
             {
@@ -87,6 +88,7 @@ def analyze(db: Session, actor: Actor, command: AnalysisCommand) -> AnalysisRead
                 "source_text": source_text,
             },
             Advice,
+            connection,
         )
         result = AnalysisResult(
             **advice.model_dump(),
@@ -106,7 +108,7 @@ def analyze(db: Session, actor: Actor, command: AnalysisCommand) -> AnalysisRead
     run = AnalysisRun(
         question_id=question.id,
         rule_version=RULE_VERSION,
-        model=settings.model_name if settings.model_enabled else "local-rules-v1",
+        model=connection.model if connection else "local-rules-v1",
         result=json_object(result),
         duration_ms=int((perf_counter() - start) * 1000),
     )

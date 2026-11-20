@@ -4,11 +4,11 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 from pydantic import JsonValue
-from sqlalchemy import JSON, ForeignKey, String, Text, UniqueConstraint
+from sqlalchemy import JSON, CheckConstraint, ForeignKey, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .db import Base
-from .domain.types import Business, Outcome, Progress, Publication, Role, Validity
+from .domain.types import AnalysisMode, Business, Outcome, Progress, Publication, Role, Validity
 
 
 def identifier() -> str:
@@ -40,6 +40,34 @@ class LoginSession(Base):
     token_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
     expires_at: Mapped[float]
+
+
+class ModelProfile(Base):
+    """保存可选择的模型连接，API 密钥与运行快照同样只保存密文。"""
+
+    __tablename__ = "model_profiles"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=identifier)
+    address: Mapped[str] = mapped_column(Text)
+    model: Mapped[str] = mapped_column(String(200))
+    encrypted_key: Mapped[str] = mapped_column(Text)
+
+
+class ModelSettings(Base):
+    """保存单一生效配置及版本，旧接口仍可读取最后一次启用的连接快照。"""
+
+    __tablename__ = "model_settings"
+    __table_args__ = (CheckConstraint("id = 1", name="ck_model_settings_singleton"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    version: Mapped[int]
+    mode: Mapped[AnalysisMode] = mapped_column(String(20))
+    address: Mapped[str] = mapped_column(Text)
+    model: Mapped[str] = mapped_column(String(200))
+    encrypted_key: Mapped[str] = mapped_column(Text)
+    updated_by: Mapped[str] = mapped_column(String(36))
+    updated_at: Mapped[str] = mapped_column(String(40))
+    profile_id: Mapped[str | None] = mapped_column(
+        ForeignKey("model_profiles.id", name="fk_model_settings_profile")
+    )
 
 
 class Source(Base):

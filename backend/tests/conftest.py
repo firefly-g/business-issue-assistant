@@ -18,6 +18,8 @@ os.environ["ADMIN_PASSWORD"] = "test-only-password-2026"
 os.environ["MODEL_BASE_URL"] = ""
 os.environ["MODEL_API_KEY"] = ""
 os.environ["MODEL_NAME"] = ""
+os.environ["MODEL_SETTINGS_KEY"] = ""
+os.environ["MODEL_SETTINGS_KEY_FILE"] = f"{_test_dir.name}/model-settings.key"
 
 
 @pytest.fixture(scope="session", autouse=True)

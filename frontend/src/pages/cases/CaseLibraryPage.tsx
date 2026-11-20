@@ -1,12 +1,7 @@
 /** @description 维护业务案例列表与 URL 筛选，刷新、分享和前进后退恢复同一查询。 */
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Alert, Button, Empty, Input, Segmented, Skeleton, Tag } from 'antd'
-import {
-  ArrowRightOutlined,
-  FileTextOutlined,
-  PlusOutlined,
-  SearchOutlined,
-} from '@ant-design/icons'
+import { ArrowRightOutlined, PlusOutlined } from '@ant-design/icons'
 import { useCases } from '../../hooks/useCases'
 import type { Business } from '../../types'
 import { publicationLabels, validityLabels } from '../../types'
@@ -55,33 +50,21 @@ export function CaseLibraryPage({ business, openCase, review = false }: CaseLibr
   })
   return (
     <>
-      <div className="page-heading">
-        <div className="page-intro compact">
-          <span className="eyebrow">
-            {review ? '把经验核对清楚，再分享给团队' : '每一次解决，都有迹可循'}
-          </span>
-          <h1>{review ? '待确认经验' : '团队案例库'}</h1>
-          <p>
-            {review
-              ? '校正草稿、记录验证结果，并确认适用范围。'
-              : '查找处理经验，核对适用条件，复用团队已经走过的路。'}
-          </p>
-        </div>
-        <Button type="primary" icon={<PlusOutlined />} onClick={onIntake}>
-          收录经验
-        </Button>
-      </div>
       <section className="library-toolbar">
-        <Input.Search
-          aria-label="搜索案例"
-          placeholder="搜索问题、错误码或关键词"
-          defaultValue={search}
-          key={search}
-          onSearch={setSearch}
-          allowClear
-          prefix={<SearchOutlined />}
-          enterButton="搜索"
-        />
+        <div className="library-search">
+          <Input.Search
+            aria-label="搜索案例"
+            placeholder="问题或错误码"
+            defaultValue={search}
+            key={search}
+            onSearch={setSearch}
+            allowClear
+            enterButton="搜索"
+          />
+          <Button type="primary" icon={<PlusOutlined />} onClick={onIntake}>
+            收录经验
+          </Button>
+        </div>
         {!review && (
           <Segmented
             aria-label="验证状态筛选"
@@ -91,21 +74,14 @@ export function CaseLibraryPage({ business, openCase, review = false }: CaseLibr
           />
         )}
       </section>
-      <div className="list-count">
-        {business}
-        <span>
-          共 {items.length} 条{review ? '待处理经验' : '经验'}
-        </span>
-      </div>
-      {state.error && (
+      {state.isLoading ? (
+        <Skeleton active />
+      ) : state.error ? (
         <Alert
           type="error"
           title={state.error}
           action={<Button onClick={state.reload}>重试</Button>}
         />
-      )}
-      {state.isLoading ? (
-        <Skeleton active />
       ) : !items.length ? (
         <div className="panel empty-library">
           <Empty
@@ -114,20 +90,19 @@ export function CaseLibraryPage({ business, openCase, review = false }: CaseLibr
                 ? '没有找到匹配的案例，请尝试其他关键词'
                 : review
                   ? '当前没有待确认的经验'
-                  : '这个业务还没有案例'
+                  : filter !== '全部'
+                    ? '没有符合筛选条件的案例'
+                    : '这个业务还没有案例'
             }
           />
-          <Button onClick={onIntake}>收录一条经验</Button>
         </div>
       ) : (
         <div className="case-grid">
           {items.map((item) => (
             <button className="case-card" key={item.id} onClick={() => openCase(item.id)}>
               <div className="case-card-top">
-                <span className="case-file">
-                  <FileTextOutlined />
-                </span>
-                <div>
+                <h2>{item.title}</h2>
+                <div className="case-card-tags">
                   <Tag
                     color={
                       item.validity === 'verified'
@@ -142,18 +117,20 @@ export function CaseLibraryPage({ business, openCase, review = false }: CaseLibr
                   {item.is_demo && <Tag>示例</Tag>}
                 </div>
               </div>
-              <h2>{item.title}</h2>
               <p>{item.symptom}</p>
-              <div className="case-condition">
-                <span>适用条件</span>
-                {item.conditions || '待处理人补充'}
-              </div>
+              {item.conditions && (
+                <div className="case-condition">
+                  <span>适用条件</span>
+                  {item.conditions}
+                </div>
+              )}
               <div className="case-card-footer">
                 <span>
                   {publicationLabels[item.publication]} · v{item.version}
                 </span>
                 <span>
-                  {new Date(item.updated_at).toLocaleDateString('zh-CN')} <ArrowRightOutlined />
+                  {new Date(item.updated_at).toLocaleDateString('zh-CN')}{' '}
+                  <ArrowRightOutlined aria-hidden />
                 </span>
               </div>
             </button>

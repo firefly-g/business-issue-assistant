@@ -24,9 +24,7 @@ export function AnalysisResult({ value, openCase, onFeedback }: AnalysisResultPr
   return (
     <section className="analysis-result panel" aria-live="polite">
       <div className="section-heading">
-        <h2>
-          <span className="small-brand">知</span>排查参考
-        </h2>
+        <h2>排查参考</h2>
         <Tag>{progressLabels[value.question.progress]}</Tag>
       </div>
       <Alert type="info" title={result.notice} showIcon />
@@ -37,15 +35,17 @@ export function AnalysisResult({ value, openCase, onFeedback }: AnalysisResultPr
           <li key={`${index}-${step}`}>{step}</li>
         ))}
       </ol>
-      <h3>需要补充的信息</h3>
-      <div className="missing-tags">
-        {result.missing.map((item, index) => (
-          <Tag key={`${index}-${item}`}>{item}</Tag>
-        ))}
-      </div>
-      <h3>
-        相关历史案例 <span className="muted">{result.citations.length}</span>
-      </h3>
+      {result.missing.length > 0 && (
+        <>
+          <h3>需要补充的信息</h3>
+          <div className="missing-tags">
+            {result.missing.map((item, index) => (
+              <Tag key={`${index}-${item}`}>{item}</Tag>
+            ))}
+          </div>
+        </>
+      )}
+      <h3>相关历史案例</h3>
       {result.citations.length ? (
         result.citations.map((item) => (
           <div key={item.id}>
@@ -56,7 +56,7 @@ export function AnalysisResult({ value, openCase, onFeedback }: AnalysisResultPr
           </div>
         ))
       ) : (
-        <p className="muted">补充具体背景后可重新分析，也可交由处理人继续跟进。</p>
+        <p className="muted">未找到相关案例，可补充背景后重新分析。</p>
       )}
       <div className="result-actions">
         <Button

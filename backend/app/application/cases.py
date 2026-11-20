@@ -5,7 +5,6 @@ import re
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
-from ..config import settings
 from ..contracts.responses import CaseRead, DraftPreview, RevisionRead, json_object
 from ..domain.commands import CaseChanges, DraftContent
 from ..domain.errors import BusinessError
@@ -16,6 +15,7 @@ from ..provider import model_json
 from .idempotency import once
 from .identity import refresh_actor
 from .materials import owned_source
+from .model_settings import active_connection
 from .rules import INTAKE_RULE, INTAKE_VERSION
 
 
@@ -68,14 +68,17 @@ def preview_draft(db: Session, actor: Actor, business: Business, text: str) -> D
     """生成未持久化预览，远程等待后复核权限，模型不能决定验证或发布状态。"""
     allow_business(actor, business)
     content = DraftContent(title=" ".join(text.split())[:80], symptom=text)
-    if settings.model_enabled:
-        content = model_json(INTAKE_RULE, {"text": text, "business": business}, DraftContent)
+    connection = active_connection(db)
+    if connection:
+        content = model_json(
+            INTAKE_RULE, {"text": text, "business": business}, DraftContent, connection
+        )
     actor = refresh_actor(db, actor)
     allow_business(actor, business)
     return DraftPreview(
         **content.model_dump(),
         rule_version=INTAKE_VERSION,
-        mode="model" if settings.model_enabled else "local_rules",
+        mode="model" if connection else "local_rules",
         similar=search_cases(db, actor, business, text)[:3],
     )
 

@@ -77,3 +77,35 @@ def test_upgrade_preserves_existing_case(tmp_path: Path, monkeypatch: MonkeyPatc
         assert item["solution"] == "历史处理步骤"
         assert item["source_id"] == "legacy-source"
     engine.dispose()
+
+
+def test_upgrade_preserves_enabled_model(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
+    """已有模型转入列表，原密文及生效模式保持一致。"""
+    url = f"sqlite:///{tmp_path}/model.db"
+    monkeypatch.setattr(settings, "database_url", url)
+    config = Config("alembic.ini")
+    command.upgrade(config, "17d95ea021a0")
+    engine = create_engine(url)
+    settings_data = {
+        "id": 1,
+        "version": 4,
+        "mode": "model",
+        "address": "https://provider.example/v1",
+        "model": "existing-model",
+        "encrypted_key": "opaque-fixture-ciphertext",
+        "updated_by": "migration-fixture",
+        "updated_at": "2026-11-18T00:00:00+00:00",
+    }
+    with engine.begin() as connection:
+        original = Table("model_settings", MetaData(), autoload_with=connection)
+        connection.execute(original.insert(), settings_data)
+    command.upgrade(config, "head")
+    with engine.connect() as connection:
+        current = Table("model_settings", MetaData(), autoload_with=connection)
+        profiles = Table("model_profiles", MetaData(), autoload_with=connection)
+        active = connection.execute(select(current)).mappings().one()
+        profile = connection.execute(select(profiles)).mappings().one()
+        assert active == {**settings_data, "profile_id": profile["id"]}
+        assert profile["model"] == settings_data["model"]
+        assert profile["encrypted_key"] == settings_data["encrypted_key"]
+    engine.dispose()

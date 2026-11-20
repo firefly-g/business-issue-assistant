@@ -23,6 +23,8 @@ class Settings(BaseSettings):
     model_base_url: str = ""
     model_api_key: str = Field(default="", repr=False)
     model_name: str = ""
+    model_settings_key: str = Field(default="", repr=False)
+    model_settings_key_file: Path = Path("data/model-settings.key")
 
     @property
     def model_enabled(self) -> bool:

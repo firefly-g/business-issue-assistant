@@ -22,11 +22,6 @@ export function RecordsPage({ business, openCase }: RecordsPageProps) {
   const [selected, setSelected] = useState<string | null>(null)
   return (
     <>
-      <div className="page-intro compact">
-        <span className="eyebrow">接续每一次排查</span>
-        <h1>我的提问</h1>
-        <p>查看分析记录，补充实际处理结果。</p>
-      </div>
       {state.error && (
         <Alert
           type="error"

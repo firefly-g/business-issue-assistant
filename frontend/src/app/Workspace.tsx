@@ -1,7 +1,7 @@
-/** @description 装配路由、业务范围和案例定位，URL 保存可分享状态，Zustand 保存跨页面客户端选择。 */
+/** @description 装配路由、页面标题、业务范围和案例定位，URL 保存可分享状态，Zustand 保存跨页面客户端选择。 */
 import { lazy, Suspense, useCallback } from 'react'
 import { Alert, App, Button, Spin } from 'antd'
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { matchPath, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { errorMessage } from '../api/client'
 import { readOverview } from '../api/services/overview'
 import { useQuery } from '../hooks/useQuery'
@@ -11,7 +11,7 @@ import type { Business, User } from '../types'
 import { Sidebar } from './Sidebar'
 import { WorkspaceHeader } from './WorkspaceHeader'
 import { WorkspaceRoutes } from './WorkspaceRoutes'
-import { navigation } from './navigation'
+import { modelSettings, navigation } from './navigation'
 
 const CaseDetail = lazy(() =>
   import('../pages/cases/CaseDetail').then((module) => ({ default: module.CaseDetail })),
@@ -38,6 +38,12 @@ export function Workspace({ user }: WorkspaceProps) {
     selectedBusiness ??
     user.businesses[0]
   const overview = useQuery({ key: `overview:${user.id}:${revision}`, load: readOverview })
+  const pathname = location.pathname === '/' ? '/assistant' : location.pathname
+  const isModelSettings = matchPath(modelSettings.path, pathname) !== null
+  const currentPage = isModelSettings
+    ? modelSettings
+    : navigation.find((item) => matchPath(item.path, pathname))
+  const pageTitle = currentPage?.pageTitle ?? currentPage?.title ?? '页面不存在'
   const openCase = useCallback(
     (id: string) =>
       setSearch((previous) => {
@@ -66,7 +72,7 @@ export function Workspace({ user }: WorkspaceProps) {
     selectBusiness(next)
     setSearch(new URLSearchParams({ business: next }))
   }
-  const selectedCase = search.get('case')
+  const selectedCase = isModelSettings ? null : search.get('case')
   return (
     <div className="workspace min-h-screen">
       <Sidebar
@@ -77,20 +83,24 @@ export function Workspace({ user }: WorkspaceProps) {
       />
       <div className="main-shell min-h-screen flex flex-col">
         <WorkspaceHeader
-          title={navigation.find((item) => item.path === location.pathname)?.title ?? '页面不存在'}
+          title={pageTitle}
           business={business}
           businesses={user.businesses}
-          modelEnabled={overview.data?.analysis_mode === 'model'}
+          analysisMode={
+            currentPage?.path === '/assistant' ? overview.data?.analysis_mode : undefined
+          }
+          showBusiness={!isModelSettings}
           onBusiness={changeBusiness}
           onLogout={() => void onLogout()}
         />
         <main className="main-content flex-1">
-          <WorkspaceRoutes business={business} openCase={openCase} />
+          <WorkspaceRoutes
+            business={business}
+            openCase={openCase}
+            role={user.role}
+            onModelSaved={refresh}
+          />
         </main>
-        <footer className="page-footer flex justify-between">
-          <span>业务问题助手</span>
-          <span>让经验可查，让解决可循。</span>
-        </footer>
       </div>
       <Suspense fallback={<Spin fullscreen />}>
         {selectedCase && (

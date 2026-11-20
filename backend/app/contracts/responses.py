@@ -159,6 +159,46 @@ class HealthRead(BaseModel):
     analysis_mode: AnalysisMode
 
 
+class ModelSettingsRead(BaseModel):
+    """维护人可见的团队配置，密钥只显示是否已设置。"""
+
+    mode: AnalysisMode
+    address: str
+    model: str
+    has_api_key: bool
+    version: int
+
+
+class ModelCatalogRead(BaseModel):
+    """供应商公开给当前凭证的模型标识，实际对话兼容性通过试连确认。"""
+
+    models: list[str]
+
+
+class ModelProfileRead(BaseModel):
+    """单套连接的安全视图，密钥只显示配置状态。"""
+
+    id: str
+    address: str
+    model: str
+    has_api_key: bool
+
+
+class ModelLibraryRead(BaseModel):
+    """团队连接列表和唯一启用项，版本用于拒绝过期保存或切换。"""
+
+    mode: AnalysisMode
+    active_profile_id: str | None
+    version: int
+    profiles: list[ModelProfileRead]
+
+
+class ModelTestRead(BaseModel):
+    """测试通过后签发短期凭证，保存时绑定账号、参数与配置版本。"""
+
+    test_token: str
+
+
 class ErrorRead(BaseModel):
     """稳定错误契约，detail 保留旧客户端的可展示消息。"""
 
