@@ -1,9 +1,8 @@
-/** @description 读取本人提问详情，反馈成功后精准刷新详情与所属列表。 */
+/** @description 读取本人提问与反馈详情，复用分析视图提供案例整理入口，反馈成功后刷新详情与列表。 */
 import { useCallback } from 'react'
-import { Alert, Button, Modal, Skeleton, Tag } from 'antd'
+import { Alert, Button, Modal, Skeleton } from 'antd'
 import { readQuestion } from '../../api/services/analysis'
 import { useQuery } from '../../hooks/useQuery'
-import { outcomeLabels } from '../../types'
 import { AnalysisResult } from '../assistant/AnalysisResult'
 
 interface QuestionDialogProps {
@@ -43,12 +42,6 @@ export function QuestionDialog({ id, onClose, openCase, onFeedback }: QuestionDi
                 onFeedback()
               }}
             />
-            {state.data.feedback?.map((item) => (
-              <div className="feedback-note" key={item.id}>
-                <Tag>{outcomeLabels[item.outcome]}</Tag>
-                {item.note}
-              </div>
-            ))}
           </>
         )
       )}

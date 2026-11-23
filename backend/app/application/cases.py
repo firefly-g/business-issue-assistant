@@ -125,6 +125,20 @@ def revise_case(
     db: Session, actor: Actor, case_id: str, version: int, changes: CaseChanges
 ) -> CaseRead:
     """校验人工确认规则，以预期版本更新并原子保存版本快照，冲突返回 409。"""
+    result = apply_case_revision(db, actor, case_id, version, changes)
+    db.commit()
+    return result
+
+
+def apply_case_revision(
+    db: Session,
+    actor: Actor,
+    case_id: str,
+    version: int,
+    changes: CaseChanges,
+    rule_version: str | None = None,
+) -> CaseRead:
+    """更新案例及历史快照但不提交，供反馈草稿发布在同一事务中复用确认规则。"""
     # 1. 检查可信身份、目标归属及状态转换的证据要求。
     item = owned_case(db, actor, case_id)
     validate_case_change(actor, item.owner_id, item.publication, changes)
@@ -138,6 +152,7 @@ def revise_case(
         )
         .values(
             **changes.model_dump(),
+            **({"rule_version": rule_version} if rule_version else {}),
             version=version + 1,
             updated_at=timestamp(),
             verified_by=actor.id if changes.validity == "verified" else None,
@@ -156,7 +171,6 @@ def revise_case(
             case_id=item.id, version=item.version, snapshot=json_object(result), editor_id=actor.id
         )
     )
-    db.commit()
     return result
 
 

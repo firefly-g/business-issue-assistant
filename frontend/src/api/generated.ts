@@ -353,7 +353,7 @@ export interface paths {
         };
         /**
          * Overview
-         * @description 只统计可访问案例及本人提问，普通成员不可借统计推断他人草稿。
+         * @description 只统计可访问案例、反馈草稿及本人提问，待确认徽标沿用实际列表权限。
          */
         get: operations["overview"];
         put?: never;
@@ -485,6 +485,110 @@ export interface paths {
          * @description 启用已保存的模型或切回本地规则，版本冲突时拒绝覆盖。
          */
         put: operations["activateModelProfile"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/questions/{question_id}/feedback/{feedback_id}/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Generate Draft
+         * @description 本人主动整理；每份反馈只有一条草稿，重复请求打开当前草稿。
+         */
+        post: operations["generateFeedbackDraft"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/feedback-drafts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Drafts
+         * @description 列出授权业务内可编辑或审核的反馈草稿，普通成员只看到本人记录。
+         */
+        get: operations["listFeedbackDrafts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/feedback-drafts/{draft_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Draft
+         * @description 读取完整草稿及输入和修改历史，目标案例权限同时复核。
+         */
+        get: operations["readFeedbackDraft"];
+        /**
+         * Save Draft
+         * @description 保存编辑或提交审核，未发布的提案不会改变正式案例。
+         */
+        put: operations["updateFeedbackDraft"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/feedback-drafts/{draft_id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Publish Draft
+         * @description 维护人显式确认有效性后，原子发布案例、版本及草稿去向。
+         */
+        post: operations["publishFeedbackDraft"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cases/{case_id}/feedback-evidence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Published Evidence
+         * @description 案例读者只查看已采用反馈的有限依据，不获得完整私人草稿。
+         */
+        get: operations["listPublishedFeedbackEvidence"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -772,6 +876,52 @@ export interface components {
             currently_available: boolean;
         };
         /**
+         * DraftContent
+         * @description 案例事实字段，未知信息留空，文本内容不隐含已验证状态。
+         */
+        DraftContent: {
+            /**
+             * Title
+             * @description 概括问题的案例标题
+             */
+            title: string;
+            /**
+             * Symptom
+             * @description 原始问题现象
+             */
+            symptom: string;
+            /**
+             * Conditions
+             * @description 系统、渠道、版本及时间前提
+             * @default
+             */
+            conditions: string;
+            /**
+             * Investigation
+             * @description 尝试操作及其观察结果
+             * @default
+             */
+            investigation: string;
+            /**
+             * Cause
+             * @description 原因说明，未确认时留空
+             * @default
+             */
+            cause: string;
+            /**
+             * Solution
+             * @description 实际处理步骤及执行角色
+             * @default
+             */
+            solution: string;
+            /**
+             * Verification
+             * @description 验证人、验证条件及实际结果
+             * @default
+             */
+            verification: string;
+        };
+        /**
          * DraftInput
          * @description 将案例事实绑定到本人已提交的原始材料。
          */
@@ -890,6 +1040,165 @@ export interface components {
             detail: string;
             /** Request Id */
             request_id: string;
+        };
+        /**
+         * FeedbackDraftEvidence
+         * @description 保存整理时的输入快照，运行建议与实际反馈分开表达。
+         */
+        FeedbackDraftEvidence: {
+            question: components["schemas"]["QuestionRead"];
+            feedback: components["schemas"]["FeedbackRead"];
+            run: components["schemas"]["RunRead"];
+            source: components["schemas"]["SourceRead"] | null;
+        };
+        /**
+         * FeedbackDraftHistory
+         * @description 每次保存与发布保留完整提案及操作主体，最初生成内容另外保留。
+         */
+        FeedbackDraftHistory: {
+            /** Version */
+            version: number;
+            /** Editor Id */
+            editor_id: string;
+            /** Created At */
+            created_at: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "draft" | "pending" | "published";
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "create" | "revise";
+            content: components["schemas"]["DraftContent"];
+            /** Target Case Id */
+            target_case_id: string | null;
+            /** Target Version */
+            target_version: number | null;
+            base_snapshot: components["schemas"]["CaseRead"] | null;
+        };
+        /**
+         * FeedbackDraftList
+         * @description 按业务及主体权限返回的反馈草稿，已发布项仍可追溯。
+         */
+        FeedbackDraftList: components["schemas"]["FeedbackDraftRead"][];
+        /**
+         * FeedbackDraftPublish
+         * @description 维护人显式确认有效性后发布；问题已解决不能替代验证依据。
+         */
+        FeedbackDraftPublish: {
+            /**
+             * Version
+             * @description 审核时读取的草稿版本
+             */
+            version: number;
+            /**
+             * Validity
+             * @description 人工确认的方案有效性，不从反馈状态推断
+             * @enum {string}
+             */
+            validity: "unverified" | "verified" | "invalid";
+        };
+        /**
+         * FeedbackDraftRead
+         * @description 仅所有者与同业务处理角色可读的完整变更草稿，不代表正式案例。
+         */
+        FeedbackDraftRead: {
+            /** Id */
+            id: string;
+            /** Question Id */
+            question_id: string;
+            /** Feedback Id */
+            feedback_id: string;
+            /** Run Id */
+            run_id: string;
+            /**
+             * Business
+             * @enum {string}
+             */
+            business: "订单售后" | "营销活动" | "系统支持";
+            /** Owner Id */
+            owner_id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "create" | "revise";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "draft" | "pending" | "published";
+            /** Version */
+            version: number;
+            /** Target Case Id */
+            target_case_id: string | null;
+            /** Target Version */
+            target_version: number | null;
+            base_snapshot: components["schemas"]["CaseRead"] | null;
+            content: components["schemas"]["DraftContent"];
+            generated_content: components["schemas"]["DraftContent"];
+            evidence: components["schemas"]["FeedbackDraftEvidence"];
+            /** History */
+            history: components["schemas"]["FeedbackDraftHistory"][];
+            /** Rule Version */
+            rule_version: string;
+            /** Model */
+            model: string;
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "model" | "local_rules";
+            /**
+             * Duration Ms
+             * @description 整理耗时，单位毫秒
+             */
+            duration_ms: number;
+            /** Published Case Id */
+            published_case_id: string | null;
+            /** Published Case Version */
+            published_case_version: number | null;
+            /** Published By */
+            published_by: string | null;
+            /** Created At */
+            created_at: string;
+            /** Updated At */
+            updated_at: string;
+        };
+        /**
+         * FeedbackDraftUpdate
+         * @description 带预期版本保存完整草稿，冲突时调用方保留输入。
+         */
+        FeedbackDraftUpdate: {
+            /** @description 人工校正后的案例事实 */
+            content: components["schemas"]["DraftContent"];
+            /**
+             * Kind
+             * @description 新增案例或修订已有案例
+             * @enum {string}
+             */
+            kind: "create" | "revise";
+            /** Target Case Id */
+            target_case_id?: string | null;
+            /**
+             * Target Version
+             * @description 人工核对的目标案例版本
+             */
+            target_version?: number | null;
+            /**
+             * Status
+             * @description 保存编辑或提交人工确认
+             * @enum {string}
+             */
+            status: "draft" | "pending";
+            /**
+             * Version
+             * @description 编辑时读取的草稿版本
+             */
+            version: number;
         };
         /**
          * FeedbackInput
@@ -1190,6 +1499,38 @@ export interface components {
             pending: number;
             /** Questions */
             questions: number;
+        };
+        /**
+         * PublishedFeedbackList
+         * @description 当前可见案例通过反馈新增或修订时留下的发布依据。
+         */
+        PublishedFeedbackList: components["schemas"]["PublishedFeedbackRead"][];
+        /**
+         * PublishedFeedbackRead
+         * @description 正式案例的反馈依据，不包含私人分析结果和未采用的人工草稿。
+         */
+        PublishedFeedbackRead: {
+            /** Draft Id */
+            draft_id: string;
+            /** Question Text */
+            question_text: string;
+            /**
+             * Outcome
+             * @enum {string}
+             */
+            outcome: "resolved" | "unresolved" | "not_applicable";
+            /** Note */
+            note: string;
+            /** Question Source Id */
+            question_source_id: string | null;
+            /** Case Version */
+            case_version: number;
+            /** Rule Version */
+            rule_version: string;
+            /** Model */
+            model: string;
+            /** Published By */
+            published_by: string;
         };
         /**
          * QuestionList
@@ -3844,6 +4185,583 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ModelLibraryRead"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Bad Gateway */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+        };
+    };
+    generateFeedbackDraft: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                question_id: string;
+                feedback_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedbackDraftRead"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Bad Gateway */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+        };
+    };
+    listFeedbackDrafts: {
+        parameters: {
+            query: {
+                business: "订单售后" | "营销活动" | "系统支持";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedbackDraftList"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Bad Gateway */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+        };
+    };
+    readFeedbackDraft: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                draft_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedbackDraftRead"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Bad Gateway */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+        };
+    };
+    updateFeedbackDraft: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                draft_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FeedbackDraftUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedbackDraftRead"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Bad Gateway */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+        };
+    };
+    publishFeedbackDraft: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                draft_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FeedbackDraftPublish"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedbackDraftRead"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+            /** @description Bad Gateway */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorRead"];
+                };
+            };
+        };
+    };
+    listPublishedFeedbackEvidence: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublishedFeedbackList"];
                 };
             };
             /** @description Unauthorized */

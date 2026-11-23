@@ -7,7 +7,7 @@ from pathlib import Path
 from fastapi import APIRouter, FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from .api import auth, cases, materials, model_settings, questions, system
+from .api import auth, cases, feedback_drafts, materials, model_settings, questions, system
 from .api.errors import install_error_handlers
 from .api.middleware import RequestMiddleware
 from .application.identity import bootstrap_admin
@@ -38,7 +38,7 @@ def create_app() -> FastAPI:
             status: {"model": ErrorRead} for status in (401, 403, 404, 409, 413, 422, 500, 502)
         },
     )
-    for module in (auth, cases, materials, questions, system, model_settings):
+    for module in (auth, cases, materials, questions, system, model_settings, feedback_drafts):
         router.include_router(module.router)
     app.include_router(router)
     frontend_dist = Path(__file__).resolve().parents[2] / "frontend" / "dist"

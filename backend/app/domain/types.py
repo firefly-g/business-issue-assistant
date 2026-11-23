@@ -10,6 +10,9 @@ Validity = Literal["unverified", "verified", "invalid"]
 Progress = Literal["processing", "resolved", "reopened"]
 Outcome = Literal["resolved", "unresolved", "not_applicable"]
 AnalysisMode = Literal["model", "local_rules"]
+# 变更草稿独立于正式案例；修订提案只有发布后才更新目标案例。
+ChangeKind = Literal["create", "revise"]
+ChangeStatus = Literal["draft", "pending", "published"]
 BUSINESSES: tuple[Business, ...] = ("订单售后", "营销活动", "系统支持")
 
 

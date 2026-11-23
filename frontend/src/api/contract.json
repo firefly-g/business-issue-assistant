@@ -533,6 +533,67 @@
       "title": "CitationRead",
       "description": "本次分析引用的案例快照，并标记当前版本是否仍可使用。"
     },
+    "DraftContent": {
+      "properties": {
+        "title": {
+          "type": "string",
+          "maxLength": 160,
+          "minLength": 2,
+          "title": "Title",
+          "description": "概括问题的案例标题"
+        },
+        "symptom": {
+          "type": "string",
+          "maxLength": 10000,
+          "minLength": 2,
+          "title": "Symptom",
+          "description": "原始问题现象"
+        },
+        "conditions": {
+          "type": "string",
+          "maxLength": 10000,
+          "title": "Conditions",
+          "description": "系统、渠道、版本及时间前提",
+          "default": ""
+        },
+        "investigation": {
+          "type": "string",
+          "maxLength": 10000,
+          "title": "Investigation",
+          "description": "尝试操作及其观察结果",
+          "default": ""
+        },
+        "cause": {
+          "type": "string",
+          "maxLength": 10000,
+          "title": "Cause",
+          "description": "原因说明，未确认时留空",
+          "default": ""
+        },
+        "solution": {
+          "type": "string",
+          "maxLength": 10000,
+          "title": "Solution",
+          "description": "实际处理步骤及执行角色",
+          "default": ""
+        },
+        "verification": {
+          "type": "string",
+          "maxLength": 10000,
+          "title": "Verification",
+          "description": "验证人、验证条件及实际结果",
+          "default": ""
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "title",
+        "symptom"
+      ],
+      "title": "DraftContent",
+      "description": "案例事实字段，未知信息留空，文本内容不隐含已验证状态。"
+    },
     "DraftInput": {
       "properties": {
         "title": {
@@ -711,6 +772,418 @@
       ],
       "title": "ErrorRead",
       "description": "稳定错误契约，detail 保留旧客户端的可展示消息。"
+    },
+    "FeedbackDraftEvidence": {
+      "properties": {
+        "question": {
+          "$ref": "#/$defs/QuestionRead"
+        },
+        "feedback": {
+          "$ref": "#/$defs/FeedbackRead"
+        },
+        "run": {
+          "$ref": "#/$defs/RunRead"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SourceRead"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "type": "object",
+      "required": [
+        "question",
+        "feedback",
+        "run",
+        "source"
+      ],
+      "title": "FeedbackDraftEvidence",
+      "description": "保存整理时的输入快照，运行建议与实际反馈分开表达。"
+    },
+    "FeedbackDraftHistory": {
+      "properties": {
+        "version": {
+          "type": "integer",
+          "title": "Version"
+        },
+        "editor_id": {
+          "type": "string",
+          "title": "Editor Id"
+        },
+        "created_at": {
+          "type": "string",
+          "title": "Created At"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "pending",
+            "published"
+          ],
+          "title": "Status"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "create",
+            "revise"
+          ],
+          "title": "Kind"
+        },
+        "content": {
+          "$ref": "#/$defs/DraftContent"
+        },
+        "target_case_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Target Case Id"
+        },
+        "target_version": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Target Version"
+        },
+        "base_snapshot": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CaseRead"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "type": "object",
+      "required": [
+        "version",
+        "editor_id",
+        "created_at",
+        "status",
+        "kind",
+        "content",
+        "target_case_id",
+        "target_version",
+        "base_snapshot"
+      ],
+      "title": "FeedbackDraftHistory",
+      "description": "每次保存与发布保留完整提案及操作主体，最初生成内容另外保留。"
+    },
+    "FeedbackDraftList": {
+      "items": {
+        "$ref": "#/$defs/FeedbackDraftRead"
+      },
+      "type": "array",
+      "title": "FeedbackDraftList",
+      "description": "按业务及主体权限返回的反馈草稿，已发布项仍可追溯。"
+    },
+    "FeedbackDraftPublish": {
+      "properties": {
+        "version": {
+          "type": "integer",
+          "minimum": 1.0,
+          "title": "Version",
+          "description": "审核时读取的草稿版本"
+        },
+        "validity": {
+          "type": "string",
+          "enum": [
+            "unverified",
+            "verified",
+            "invalid"
+          ],
+          "title": "Validity",
+          "description": "人工确认的方案有效性，不从反馈状态推断"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "version",
+        "validity"
+      ],
+      "title": "FeedbackDraftPublish",
+      "description": "维护人显式确认有效性后发布；问题已解决不能替代验证依据。"
+    },
+    "FeedbackDraftRead": {
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "Id"
+        },
+        "question_id": {
+          "type": "string",
+          "title": "Question Id"
+        },
+        "feedback_id": {
+          "type": "string",
+          "title": "Feedback Id"
+        },
+        "run_id": {
+          "type": "string",
+          "title": "Run Id"
+        },
+        "business": {
+          "type": "string",
+          "enum": [
+            "订单售后",
+            "营销活动",
+            "系统支持"
+          ],
+          "title": "Business"
+        },
+        "owner_id": {
+          "type": "string",
+          "title": "Owner Id"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "create",
+            "revise"
+          ],
+          "title": "Kind"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "pending",
+            "published"
+          ],
+          "title": "Status"
+        },
+        "version": {
+          "type": "integer",
+          "title": "Version"
+        },
+        "target_case_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Target Case Id"
+        },
+        "target_version": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Target Version"
+        },
+        "base_snapshot": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CaseRead"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "content": {
+          "$ref": "#/$defs/DraftContent"
+        },
+        "generated_content": {
+          "$ref": "#/$defs/DraftContent"
+        },
+        "evidence": {
+          "$ref": "#/$defs/FeedbackDraftEvidence"
+        },
+        "history": {
+          "items": {
+            "$ref": "#/$defs/FeedbackDraftHistory"
+          },
+          "type": "array",
+          "title": "History"
+        },
+        "rule_version": {
+          "type": "string",
+          "title": "Rule Version"
+        },
+        "model": {
+          "type": "string",
+          "title": "Model"
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "model",
+            "local_rules"
+          ],
+          "title": "Mode"
+        },
+        "duration_ms": {
+          "type": "integer",
+          "title": "Duration Ms",
+          "description": "整理耗时，单位毫秒"
+        },
+        "published_case_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Published Case Id"
+        },
+        "published_case_version": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Published Case Version"
+        },
+        "published_by": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Published By"
+        },
+        "created_at": {
+          "type": "string",
+          "title": "Created At"
+        },
+        "updated_at": {
+          "type": "string",
+          "title": "Updated At"
+        }
+      },
+      "type": "object",
+      "required": [
+        "id",
+        "question_id",
+        "feedback_id",
+        "run_id",
+        "business",
+        "owner_id",
+        "kind",
+        "status",
+        "version",
+        "target_case_id",
+        "target_version",
+        "base_snapshot",
+        "content",
+        "generated_content",
+        "evidence",
+        "history",
+        "rule_version",
+        "model",
+        "mode",
+        "duration_ms",
+        "published_case_id",
+        "published_case_version",
+        "published_by",
+        "created_at",
+        "updated_at"
+      ],
+      "title": "FeedbackDraftRead",
+      "description": "仅所有者与同业务处理角色可读的完整变更草稿，不代表正式案例。"
+    },
+    "FeedbackDraftUpdate": {
+      "properties": {
+        "content": {
+          "$ref": "#/$defs/DraftContent",
+          "description": "人工校正后的案例事实"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "create",
+            "revise"
+          ],
+          "title": "Kind",
+          "description": "新增案例或修订已有案例"
+        },
+        "target_case_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 36,
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Target Case Id"
+        },
+        "target_version": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1.0
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Target Version",
+          "description": "人工核对的目标案例版本"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "pending"
+          ],
+          "title": "Status",
+          "description": "保存编辑或提交人工确认"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1.0,
+          "title": "Version",
+          "description": "编辑时读取的草稿版本"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "content",
+        "kind",
+        "status",
+        "version"
+      ],
+      "title": "FeedbackDraftUpdate",
+      "description": "带预期版本保存完整草稿，冲突时调用方保留输入。"
     },
     "FeedbackInput": {
       "properties": {
@@ -1306,6 +1779,80 @@
       ],
       "title": "OverviewRead",
       "description": "当前可见范围的统计值，普通成员只计入公开或本人案例。"
+    },
+    "PublishedFeedbackList": {
+      "items": {
+        "$ref": "#/$defs/PublishedFeedbackRead"
+      },
+      "type": "array",
+      "title": "PublishedFeedbackList",
+      "description": "当前可见案例通过反馈新增或修订时留下的发布依据。"
+    },
+    "PublishedFeedbackRead": {
+      "properties": {
+        "draft_id": {
+          "type": "string",
+          "title": "Draft Id"
+        },
+        "question_text": {
+          "type": "string",
+          "title": "Question Text"
+        },
+        "outcome": {
+          "type": "string",
+          "enum": [
+            "resolved",
+            "unresolved",
+            "not_applicable"
+          ],
+          "title": "Outcome"
+        },
+        "note": {
+          "type": "string",
+          "title": "Note"
+        },
+        "question_source_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Question Source Id"
+        },
+        "case_version": {
+          "type": "integer",
+          "title": "Case Version"
+        },
+        "rule_version": {
+          "type": "string",
+          "title": "Rule Version"
+        },
+        "model": {
+          "type": "string",
+          "title": "Model"
+        },
+        "published_by": {
+          "type": "string",
+          "title": "Published By"
+        }
+      },
+      "type": "object",
+      "required": [
+        "draft_id",
+        "question_text",
+        "outcome",
+        "note",
+        "question_source_id",
+        "case_version",
+        "rule_version",
+        "model",
+        "published_by"
+      ],
+      "title": "PublishedFeedbackRead",
+      "description": "正式案例的反馈依据，不包含私人分析结果和未采用的人工草稿。"
     },
     "QuestionList": {
       "items": {

@@ -1,10 +1,10 @@
 """定义业务输入值对象，约束文本与有限状态，权限和事务由用例负责。"""
 
-from typing import Annotated
+from typing import Annotated, Literal, Self
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
-from .types import Business, Outcome, Publication, Validity
+from .types import Business, ChangeKind, Outcome, Publication, Validity
 
 
 class Command(BaseModel):
@@ -60,3 +60,23 @@ class FeedbackCommand(Command):
 
     outcome: Outcome = Field(description="本次问题的处理结果")
     note: str = Field(min_length=2, max_length=5000, description="实际操作、观察结果和确认情况")
+
+
+class FeedbackDraftChanges(Command):
+    """完整保存案例提案；修订必须明确目标及人工核对过的基础版本。"""
+
+    content: DraftContent = Field(description="人工校正后的案例事实")
+    kind: ChangeKind = Field(description="新增案例或修订已有案例")
+    target_case_id: str | None = Field(default=None, min_length=1, max_length=36)
+    target_version: int | None = Field(default=None, ge=1, description="人工核对的目标案例版本")
+    status: Literal["draft", "pending"] = Field(description="保存编辑或提交人工确认")
+
+    @model_validator(mode="after")
+    def validate_target(self) -> Self:
+        """新增不得夹带修订目标，修订不得缺少版本，避免隐式覆盖正式案例。"""
+        if self.kind == "revise":
+            if self.target_case_id is None or self.target_version is None:
+                raise ValueError("修订草稿必须选择目标案例及其版本")
+        elif self.target_case_id is not None or self.target_version is not None:
+            raise ValueError("新增草稿不能包含修订目标")
+        return self

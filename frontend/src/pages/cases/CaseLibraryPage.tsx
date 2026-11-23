@@ -1,10 +1,11 @@
-/** @description 维护业务案例列表与 URL 筛选，刷新、分享和前进后退恢复同一查询。 */
+/** @description 维护业务案例列表与 URL 筛选，待确认模式同时装配独立反馈草稿审核列表。 */
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Alert, Button, Empty, Input, Segmented, Skeleton, Tag } from 'antd'
 import { ArrowRightOutlined, PlusOutlined } from '@ant-design/icons'
 import { useCases } from '../../hooks/useCases'
 import type { Business } from '../../types'
 import { publicationLabels, validityLabels } from '../../types'
+import { FeedbackDraftQueue } from '../feedback/FeedbackDraftQueue'
 
 interface CaseLibraryPageProps {
   /** 当前账号允许访问的业务。 */
@@ -50,6 +51,7 @@ export function CaseLibraryPage({ business, openCase, review = false }: CaseLibr
   })
   return (
     <>
+      {review && <FeedbackDraftQueue business={business} openCase={openCase} />}
       <section className="library-toolbar">
         <div className="library-search">
           <Input.Search

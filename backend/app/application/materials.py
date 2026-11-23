@@ -10,7 +10,7 @@ from ..contracts.responses import SourceRead
 from ..domain.errors import BusinessError
 from ..domain.policies import allow_business
 from ..domain.types import Actor, Business
-from ..models import Case, Source, identifier
+from ..models import Case, FeedbackDraft, Source, identifier
 
 MAX_IMAGE_BYTES = 5 * 1024 * 1024
 
@@ -29,7 +29,20 @@ def owned_source(db: Session, actor: Actor, source_id: str) -> Source:
             )
             .exists()
         )
-        statement = statement.where((Source.owner_id == actor.id) | published)
+        # 反馈草稿发布后，原问题截图成为该案例的补充依据；归档案例会撤回这条共享关系。
+        feedback_published = (
+            select(FeedbackDraft.id)
+            .join(Case, Case.id == FeedbackDraft.published_case_id)
+            .where(
+                FeedbackDraft.question_source_id == Source.id,
+                FeedbackDraft.business == Source.business,
+                FeedbackDraft.status == "published",
+                Case.business == Source.business,
+                Case.publication == "published",
+            )
+            .exists()
+        )
+        statement = statement.where((Source.owner_id == actor.id) | published | feedback_published)
     source = db.scalar(statement)
     if not source:
         raise BusinessError("NOT_FOUND", "原始材料不存在", 404)

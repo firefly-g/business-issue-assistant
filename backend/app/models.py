@@ -8,7 +8,17 @@ from sqlalchemy import JSON, CheckConstraint, ForeignKey, String, Text, UniqueCo
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .db import Base
-from .domain.types import AnalysisMode, Business, Outcome, Progress, Publication, Role, Validity
+from .domain.types import (
+    AnalysisMode,
+    Business,
+    ChangeKind,
+    ChangeStatus,
+    Outcome,
+    Progress,
+    Publication,
+    Role,
+    Validity,
+)
 
 
 def identifier() -> str:
@@ -170,3 +180,38 @@ class WriteRequest(Base):
     id: Mapped[str] = mapped_column(String(180), primary_key=True)
     fingerprint: Mapped[str] = mapped_column(String(64))
     result: Mapped[dict[str, JsonValue]] = mapped_column(JSON)
+
+
+class FeedbackDraft(Base):
+    """每份反馈最多整理一次；修订提案独立保存，发布事务才更新正式案例。"""
+
+    __tablename__ = "feedback_drafts"
+    __table_args__ = (UniqueConstraint("feedback_id", name="uq_feedback_drafts_feedback"),)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=identifier)
+    question_id: Mapped[str] = mapped_column(ForeignKey("questions.id"))
+    feedback_id: Mapped[str] = mapped_column(ForeignKey("feedback.id"))
+    run_id: Mapped[str] = mapped_column(ForeignKey("analysis_runs.id"))
+    business: Mapped[Business] = mapped_column(String(80))
+    owner_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
+    # 原始图片仍保存于原材料；只有发布成功后才通过案例关系授予同业务读者访问权。
+    question_source_id: Mapped[str | None] = mapped_column(ForeignKey("sources.id"))
+    kind: Mapped[ChangeKind] = mapped_column(String(20), default="create")
+    status: Mapped[ChangeStatus] = mapped_column(String(20), default="draft")
+    version: Mapped[int] = mapped_column(default=1)
+    target_case_id: Mapped[str | None] = mapped_column(ForeignKey("cases.id"))
+    target_version: Mapped[int | None]
+    # 保存当前人工核对的基准，最初生成内容另存；历史快照保留每次基准与提案。
+    base_snapshot: Mapped[dict[str, JsonValue] | None] = mapped_column(JSON)
+    content: Mapped[dict[str, JsonValue]] = mapped_column(JSON)
+    generated_content: Mapped[dict[str, JsonValue]] = mapped_column(JSON)
+    evidence: Mapped[dict[str, JsonValue]] = mapped_column(JSON)
+    history: Mapped[list[dict[str, JsonValue]]] = mapped_column(JSON, default=list)
+    rule_version: Mapped[str] = mapped_column(String(80))
+    model: Mapped[str] = mapped_column(String(200))
+    mode: Mapped[AnalysisMode] = mapped_column(String(20))
+    duration_ms: Mapped[int]
+    published_case_id: Mapped[str | None] = mapped_column(ForeignKey("cases.id"))
+    published_case_version: Mapped[int | None]
+    published_by: Mapped[str | None] = mapped_column(ForeignKey("users.id"))
+    created_at: Mapped[str] = mapped_column(String(40), default=timestamp)
+    updated_at: Mapped[str] = mapped_column(String(40), default=timestamp)

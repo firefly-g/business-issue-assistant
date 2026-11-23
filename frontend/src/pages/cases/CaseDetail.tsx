@@ -1,10 +1,11 @@
-/** @description 案例详情组合事实、授权原文与历史版本，确认编辑由独立表单维护。 */
+/** @description 案例详情组合事实、授权原文、已采用反馈与历史版本，确认编辑由独立表单维护。 */
 import { Alert, Button, Drawer, Tabs, Tag } from 'antd'
 import type { Business, Case, User } from '../../types'
 import { publicationLabels, validityLabels } from '../../types'
 import { CaseEditForm } from './CaseEditForm'
 import { RevisionHistory } from './RevisionHistory'
 import { SourceEvidence } from './SourceEvidence'
+import { FeedbackEvidence } from './FeedbackEvidence'
 import { useCaseDetail } from './useCaseDetail'
 
 interface CaseDetailProps {
@@ -77,7 +78,12 @@ export function CaseDetail({ id, user, onClose, onUpdated, onReuse }: CaseDetail
                   {
                     key: 'source',
                     label: '原始依据',
-                    children: <SourceEvidence sourceId={item.source_id} />,
+                    children: (
+                      <>
+                        <SourceEvidence sourceId={item.source_id} />
+                        <FeedbackEvidence caseId={item.id} version={item.version} />
+                      </>
+                    ),
                   },
                   {
                     key: 'history',

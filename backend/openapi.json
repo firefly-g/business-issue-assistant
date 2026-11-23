@@ -2056,7 +2056,7 @@
           "工作台"
         ],
         "summary": "Overview",
-        "description": "只统计可访问案例及本人提问，普通成员不可借统计推断他人草稿。",
+        "description": "只统计可访问案例、反馈草稿及本人提问，待确认徽标沿用实际列表权限。",
         "operationId": "overview",
         "responses": {
           "200": {
@@ -3034,6 +3034,738 @@
           }
         }
       }
+    },
+    "/api/questions/{question_id}/feedback/{feedback_id}/draft": {
+      "post": {
+        "tags": [
+          "反馈案例草稿"
+        ],
+        "summary": "Generate Draft",
+        "description": "本人主动整理；每份反馈只有一条草稿，重复请求打开当前草稿。",
+        "operationId": "generateFeedbackDraft",
+        "parameters": [
+          {
+            "name": "question_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Question Id"
+            }
+          },
+          {
+            "name": "feedback_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Feedback Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 80,
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackDraftRead"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          }
+        }
+      }
+    },
+    "/api/feedback-drafts": {
+      "get": {
+        "tags": [
+          "反馈案例草稿"
+        ],
+        "summary": "List Drafts",
+        "description": "列出授权业务内可编辑或审核的反馈草稿，普通成员只看到本人记录。",
+        "operationId": "listFeedbackDrafts",
+        "parameters": [
+          {
+            "name": "business",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "订单售后",
+                "营销活动",
+                "系统支持"
+              ],
+              "type": "string",
+              "title": "Business"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackDraftList"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          }
+        }
+      }
+    },
+    "/api/feedback-drafts/{draft_id}": {
+      "get": {
+        "tags": [
+          "反馈案例草稿"
+        ],
+        "summary": "Read Draft",
+        "description": "读取完整草稿及输入和修改历史，目标案例权限同时复核。",
+        "operationId": "readFeedbackDraft",
+        "parameters": [
+          {
+            "name": "draft_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Draft Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackDraftRead"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "反馈案例草稿"
+        ],
+        "summary": "Save Draft",
+        "description": "保存编辑或提交审核，未发布的提案不会改变正式案例。",
+        "operationId": "updateFeedbackDraft",
+        "parameters": [
+          {
+            "name": "draft_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Draft Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackDraftUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackDraftRead"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          }
+        }
+      }
+    },
+    "/api/feedback-drafts/{draft_id}/publish": {
+      "post": {
+        "tags": [
+          "反馈案例草稿"
+        ],
+        "summary": "Publish Draft",
+        "description": "维护人显式确认有效性后，原子发布案例、版本及草稿去向。",
+        "operationId": "publishFeedbackDraft",
+        "parameters": [
+          {
+            "name": "draft_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Draft Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 80,
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackDraftPublish"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackDraftRead"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          }
+        }
+      }
+    },
+    "/api/cases/{case_id}/feedback-evidence": {
+      "get": {
+        "tags": [
+          "反馈案例草稿"
+        ],
+        "summary": "Published Evidence",
+        "description": "案例读者只查看已采用反馈的有限依据，不获得完整私人草稿。",
+        "operationId": "listPublishedFeedbackEvidence",
+        "parameters": [
+          {
+            "name": "case_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Case Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublishedFeedbackList"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorRead"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3569,6 +4301,67 @@
         "title": "CitationRead",
         "description": "本次分析引用的案例快照，并标记当前版本是否仍可使用。"
       },
+      "DraftContent": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 160,
+            "minLength": 2,
+            "title": "Title",
+            "description": "概括问题的案例标题"
+          },
+          "symptom": {
+            "type": "string",
+            "maxLength": 10000,
+            "minLength": 2,
+            "title": "Symptom",
+            "description": "原始问题现象"
+          },
+          "conditions": {
+            "type": "string",
+            "maxLength": 10000,
+            "title": "Conditions",
+            "description": "系统、渠道、版本及时间前提",
+            "default": ""
+          },
+          "investigation": {
+            "type": "string",
+            "maxLength": 10000,
+            "title": "Investigation",
+            "description": "尝试操作及其观察结果",
+            "default": ""
+          },
+          "cause": {
+            "type": "string",
+            "maxLength": 10000,
+            "title": "Cause",
+            "description": "原因说明，未确认时留空",
+            "default": ""
+          },
+          "solution": {
+            "type": "string",
+            "maxLength": 10000,
+            "title": "Solution",
+            "description": "实际处理步骤及执行角色",
+            "default": ""
+          },
+          "verification": {
+            "type": "string",
+            "maxLength": 10000,
+            "title": "Verification",
+            "description": "验证人、验证条件及实际结果",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "title",
+          "symptom"
+        ],
+        "title": "DraftContent",
+        "description": "案例事实字段，未知信息留空，文本内容不隐含已验证状态。"
+      },
       "DraftInput": {
         "properties": {
           "title": {
@@ -3747,6 +4540,418 @@
         ],
         "title": "ErrorRead",
         "description": "稳定错误契约，detail 保留旧客户端的可展示消息。"
+      },
+      "FeedbackDraftEvidence": {
+        "properties": {
+          "question": {
+            "$ref": "#/components/schemas/QuestionRead"
+          },
+          "feedback": {
+            "$ref": "#/components/schemas/FeedbackRead"
+          },
+          "run": {
+            "$ref": "#/components/schemas/RunRead"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "question",
+          "feedback",
+          "run",
+          "source"
+        ],
+        "title": "FeedbackDraftEvidence",
+        "description": "保存整理时的输入快照，运行建议与实际反馈分开表达。"
+      },
+      "FeedbackDraftHistory": {
+        "properties": {
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "editor_id": {
+            "type": "string",
+            "title": "Editor Id"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "pending",
+              "published"
+            ],
+            "title": "Status"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "create",
+              "revise"
+            ],
+            "title": "Kind"
+          },
+          "content": {
+            "$ref": "#/components/schemas/DraftContent"
+          },
+          "target_case_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Case Id"
+          },
+          "target_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Version"
+          },
+          "base_snapshot": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CaseRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "version",
+          "editor_id",
+          "created_at",
+          "status",
+          "kind",
+          "content",
+          "target_case_id",
+          "target_version",
+          "base_snapshot"
+        ],
+        "title": "FeedbackDraftHistory",
+        "description": "每次保存与发布保留完整提案及操作主体，最初生成内容另外保留。"
+      },
+      "FeedbackDraftList": {
+        "items": {
+          "$ref": "#/components/schemas/FeedbackDraftRead"
+        },
+        "type": "array",
+        "title": "FeedbackDraftList",
+        "description": "按业务及主体权限返回的反馈草稿，已发布项仍可追溯。"
+      },
+      "FeedbackDraftPublish": {
+        "properties": {
+          "version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Version",
+            "description": "审核时读取的草稿版本"
+          },
+          "validity": {
+            "type": "string",
+            "enum": [
+              "unverified",
+              "verified",
+              "invalid"
+            ],
+            "title": "Validity",
+            "description": "人工确认的方案有效性，不从反馈状态推断"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "version",
+          "validity"
+        ],
+        "title": "FeedbackDraftPublish",
+        "description": "维护人显式确认有效性后发布；问题已解决不能替代验证依据。"
+      },
+      "FeedbackDraftRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "question_id": {
+            "type": "string",
+            "title": "Question Id"
+          },
+          "feedback_id": {
+            "type": "string",
+            "title": "Feedback Id"
+          },
+          "run_id": {
+            "type": "string",
+            "title": "Run Id"
+          },
+          "business": {
+            "type": "string",
+            "enum": [
+              "订单售后",
+              "营销活动",
+              "系统支持"
+            ],
+            "title": "Business"
+          },
+          "owner_id": {
+            "type": "string",
+            "title": "Owner Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "create",
+              "revise"
+            ],
+            "title": "Kind"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "pending",
+              "published"
+            ],
+            "title": "Status"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "target_case_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Case Id"
+          },
+          "target_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Version"
+          },
+          "base_snapshot": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CaseRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "content": {
+            "$ref": "#/components/schemas/DraftContent"
+          },
+          "generated_content": {
+            "$ref": "#/components/schemas/DraftContent"
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/FeedbackDraftEvidence"
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/FeedbackDraftHistory"
+            },
+            "type": "array",
+            "title": "History"
+          },
+          "rule_version": {
+            "type": "string",
+            "title": "Rule Version"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "model",
+              "local_rules"
+            ],
+            "title": "Mode"
+          },
+          "duration_ms": {
+            "type": "integer",
+            "title": "Duration Ms",
+            "description": "整理耗时，单位毫秒"
+          },
+          "published_case_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published Case Id"
+          },
+          "published_case_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published Case Version"
+          },
+          "published_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published By"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "question_id",
+          "feedback_id",
+          "run_id",
+          "business",
+          "owner_id",
+          "kind",
+          "status",
+          "version",
+          "target_case_id",
+          "target_version",
+          "base_snapshot",
+          "content",
+          "generated_content",
+          "evidence",
+          "history",
+          "rule_version",
+          "model",
+          "mode",
+          "duration_ms",
+          "published_case_id",
+          "published_case_version",
+          "published_by",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "FeedbackDraftRead",
+        "description": "仅所有者与同业务处理角色可读的完整变更草稿，不代表正式案例。"
+      },
+      "FeedbackDraftUpdate": {
+        "properties": {
+          "content": {
+            "$ref": "#/components/schemas/DraftContent",
+            "description": "人工校正后的案例事实"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "create",
+              "revise"
+            ],
+            "title": "Kind",
+            "description": "新增案例或修订已有案例"
+          },
+          "target_case_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 36,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Case Id"
+          },
+          "target_version": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Version",
+            "description": "人工核对的目标案例版本"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "pending"
+            ],
+            "title": "Status",
+            "description": "保存编辑或提交人工确认"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Version",
+            "description": "编辑时读取的草稿版本"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "content",
+          "kind",
+          "status",
+          "version"
+        ],
+        "title": "FeedbackDraftUpdate",
+        "description": "带预期版本保存完整草稿，冲突时调用方保留输入。"
       },
       "FeedbackInput": {
         "properties": {
@@ -4342,6 +5547,80 @@
         ],
         "title": "OverviewRead",
         "description": "当前可见范围的统计值，普通成员只计入公开或本人案例。"
+      },
+      "PublishedFeedbackList": {
+        "items": {
+          "$ref": "#/components/schemas/PublishedFeedbackRead"
+        },
+        "type": "array",
+        "title": "PublishedFeedbackList",
+        "description": "当前可见案例通过反馈新增或修订时留下的发布依据。"
+      },
+      "PublishedFeedbackRead": {
+        "properties": {
+          "draft_id": {
+            "type": "string",
+            "title": "Draft Id"
+          },
+          "question_text": {
+            "type": "string",
+            "title": "Question Text"
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "resolved",
+              "unresolved",
+              "not_applicable"
+            ],
+            "title": "Outcome"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note"
+          },
+          "question_source_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Question Source Id"
+          },
+          "case_version": {
+            "type": "integer",
+            "title": "Case Version"
+          },
+          "rule_version": {
+            "type": "string",
+            "title": "Rule Version"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "published_by": {
+            "type": "string",
+            "title": "Published By"
+          }
+        },
+        "type": "object",
+        "required": [
+          "draft_id",
+          "question_text",
+          "outcome",
+          "note",
+          "question_source_id",
+          "case_version",
+          "rule_version",
+          "model",
+          "published_by"
+        ],
+        "title": "PublishedFeedbackRead",
+        "description": "正式案例的反馈依据，不包含私人分析结果和未采用的人工草稿。"
       },
       "QuestionList": {
         "items": {

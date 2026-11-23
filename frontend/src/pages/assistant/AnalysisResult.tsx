@@ -1,4 +1,4 @@
-/** @description 展示经后台复核的分析与引用，反馈交给独立交互维护，模型内容按纯文本渲染。 */
+/** @description 展示经后台复核的分析与引用，并承接实际反馈及案例整理入口，模型内容按纯文本渲染。 */
 import { useState } from 'react'
 import { Alert, App, Button, Tag } from 'antd'
 import { CopyOutlined } from '@ant-design/icons'
@@ -6,6 +6,7 @@ import { CaseRow } from '../../components/CaseRow'
 import type { Analysis } from '../../types'
 import { progressLabels } from '../../types'
 import { FeedbackDialog } from './FeedbackDialog'
+import { FeedbackHistory } from '../feedback/FeedbackHistory'
 
 interface AnalysisResultProps {
   /** 通过领域 Service 校验的提问与分析。 */
@@ -81,6 +82,7 @@ export function AnalysisResult({ value, openCase, onFeedback }: AnalysisResultPr
           规则版本 {value.run.rule_version} · {value.run.model}
         </p>
       </details>
+      <FeedbackHistory value={value} openCase={openCase} />
       <FeedbackDialog
         key={value.question.id}
         questionId={value.question.id}
